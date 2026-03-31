@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <h2>👨‍🏫 Teacher Dashboard</h2>
+    <p class="subtext">Manage your students securely across the cloud.</p>
+
+    <!-- Form to input new or update existing student data -->
+    <div class="box">
+        <input id="studentName" type="text" placeholder="Student Name">
+        <label for="studentDOB">Date of Birth (For Student Login):</label>
+        <input id="studentDOB" type="date">
+
+        <input id="studentClass" type="text" placeholder="Class/Grade">
+
+        <label for="feesPaid">Fees Paid:</label>
+        <input id="feesPaid" type="checkbox" style="margin-bottom: 24px;">
+
+        <textarea id="notes" placeholder="Additional Notes..." rows="3"></textarea>
+
+        <button id="addStudentBtn">Save Student Data</button>
+    </div>
+
+    <!-- Dynamic table to show students from Database -->
+    <div class="container table-container" style="max-width: 1100px;">
+        <h2>Database: Current Students</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>DOB</th>
+                    <th>Class</th>
+                    <th>Fees Paid</th>
+                    <th>Notes</th>
+                    <th>Date Added</th>
+                    <th style="min-width: 180px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                <!-- JavaScript will magically inject rows here! -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="nav-links">
+        <a href="index.html">← Logout</a>
+    </div>
+
+    <!-- Firebase Logic directly inside this page -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        // Global state for editing
+        let editStudentId = null;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQnWl_OAeJZH6Pyz45tFdIQONIXo6steM",
+            authDomain: "tution-1881b.firebaseapp.com",
+            projectId: "tution-1881b",
+            storageBucket: "tution-1881b.firebasestorage.app",
+            messagingSenderId: "842710800011",
+            appId: "1:842710800011:web:a4e6eb4d8eb84009f3268e",
+            measurementId: "G-8E8QN984W7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const addStudentBtn = document.getElementById("addStudentBtn");
+        const studentTableBody = document.getElementById("studentTableBody");
+
+        // === Expose CRUD functions to global scope for HTML inline clicking ===
+        window.deleteStudent = async (id) => {
+            if (confirm("Are you sure you want to permanently delete this student record?")) {
+                try {
+                    await deleteDoc(doc(db, "students", id));
+                } catch (error) {
+                    alert("Error deleting student: " + error.message);
+                }
+            }
+        };
+
+        window.editStudent = (id, jsonStr) => {
+            const student = JSON.parse(decodeURIComponent(jsonStr));
+
+            // Populate form with existing data
+            document.getElementById("studentName").value = student.name;
+            document.getElementById("studentDOB").value = student.dob;
+            document.getElementById("studentClass").value = student.className;
+            document.getElementById("feesPaid").checked = student.feesPaid;
+            document.getElementById("notes").value = student.notes;
+
+            // Set state to editing
+            editStudentId = id;
+            addStudentBtn.innerText = "🔄 Update Student Record";
+            addStudentBtn.style.background = "linear-gradient(135deg, #10b981 0%, #34d399 100%)"; // Change color to green
+
+            // Scroll smoothly to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+
+        // Function 1: ADD or UPDATE a Student
+        addStudentBtn.addEventListener("click", async () => {
+            const nameInput = document.getElementById("studentName");
+            const dobInput = document.getElementById("studentDOB");
+            const classInput = document.getElementById("studentClass");
+            const feesPaidCheck = document.getElementById("feesPaid");
+            const notesInput = document.getElementById("notes");
+
+            if (!nameInput.value.trim() || !dobInput.value) {
+                alert("Please enter Name and Date of Birth!");
+                return;
+            }
+
+            try {
+                if (editStudentId !== null) {
+                    // Update an existing student doc
+                    await updateDoc(doc(db, "students", editStudentId), {
+                        name: nameInput.value,
+                        dob: dobInput.value,
+                        className: classInput.value,
+                        feesPaid: feesPaidCheck.checked,
+                        notes: notesInput.value
+                        // We do not change createdAt purely so we don't mess up sorting!
+                    });
+
+                    // Reset Editing State
+                    editStudentId = null;
+                    addStudentBtn.innerText = "Save Student Data";
+                    addStudentBtn.style.background = ""; // Restore standard css gradient
+                    alert("Student successfully updated!");
+
+                } else {
+                    // Create a brand new student doc
+                    await addDoc(collection(db, "students"), {
+                        name: nameInput.value,
+                        dob: dobInput.value,
+                        className: classInput.value,
+                        feesPaid: feesPaidCheck.checked,
+                        notes: notesInput.value,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
+                // Clear the form visually
+                nameInput.value = "";
+                dobInput.value = "";
+                classInput.value = "";
+                feesPaidCheck.checked = false;
+                notesInput.value = "";
+
+            } catch (error) {
+                alert("Error saving: " + error.message);
+            }
+        });
+
+        // Function 2: READ students automatically in real-time
+        const q = query(collection(db, "students"), orderBy("createdAt", "desc"));
+
+        onSnapshot(q, (snapshot) => {
+            studentTableBody.innerHTML = "";
+
+            snapshot.forEach((documentSnap) => {
+                const student = documentSnap.data();
+                const tr = document.createElement("tr");
+
+                const dateStr = new Date(student.createdAt).toLocaleDateString();
+
+                // Safely package the object to inject into the HTML function call
+                const safeJson = encodeURIComponent(JSON.stringify(student));
+
+                tr.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.dob || 'N/A'}</td>
+                    <td>${student.className}</td>
+                    <td class="${student.feesPaid ? 'status-yes' : 'status-no'}">${student.feesPaid ? "✅ Yes" : "❌ No"}</td>
+                    <td>${student.notes}</td>
+                    <td>${dateStr}</td>
+                    <td style="display: flex; gap: 8px;">
+                        <button onclick="editStudent('${documentSnap.id}', '${safeJson}')" style="margin: 0; padding: 10px 14px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); font-size: 0.9rem; flex: 1;">✏️ Edit</button>
+                        <button onclick="deleteStudent('${documentSnap.id}')" style="margin: 0; padding: 10px 14px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); font-size: 0.9rem; flex: 1;">🗑️ Del</button>
+                    </td>
+                `;
+                studentTableBody.appendChild(tr);
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Student Profile</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+    <h2>🎓 My Student Profile</h2>
+    <p class="subtext">Your securely stored personal classroom records.</p>
+    
+    <div class="container table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>DOB</th>
+                    <th>Class</th>
+                    <th>Fees Paid</th>
+                    <th>Notes</th>
+                    <th>Profile Created</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                <!-- Data loads here -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="nav-links">
+        <a href="index.html" onclick="localStorage.clear();">← Logout</a>
+    </div>
+
+    <!-- Firebase Logic directly inside this page -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        // SECURITY CHECK: Verify if they logged in via student.html
+        const sName = localStorage.getItem("loggedInStudentName");
+        const sDOB = localStorage.getItem("loggedInStudentDOB");
+
+        if (!sName || !sDOB) {
+            alert("Unauthorized. Please login first.");
+            window.location.href = "student.html";
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQnWl_OAeJZH6Pyz45tFdIQONIXo6steM",
+            authDomain: "tution-1881b.firebaseapp.com",
+            projectId: "tution-1881b",
+            storageBucket: "tution-1881b.firebasestorage.app",
+            messagingSenderId: "842710800011",
+            appId: "1:842710800011:web:a4e6eb4d8eb84009f3268e",
+            measurementId: "G-8E8QN984W7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const studentTableBody = document.getElementById("studentTableBody");
+
+        // ONLY querying for their EXACT match so they can never see other students' profiles 
+        const q = query(
+            collection(db, "students"), 
+            where("name", "==", sName),
+            where("dob", "==", sDOB)
+        );
+
+        onSnapshot(q, (snapshot) => {
+            studentTableBody.innerHTML = ""; 
+            
+            snapshot.forEach((doc) => {
+                const student = doc.data();
+                const tr = document.createElement("tr");
+
+                const dateStr = new Date(student.createdAt).toLocaleDateString();
+
+                tr.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.dob}</td>
+                    <td>${student.className}</td>
+                    <td class="${student.feesPaid ? 'status-yes' : 'status-no'}">${student.feesPaid ? "✅ Yes" : "❌ No"}</td>
+                    <td>${student.notes}</td>
+                    <td>${dateStr}</td>
+                `;
+                studentTableBody.appendChild(tr);
+            });
+        });
+
+    </script>
+</body>
+</html>

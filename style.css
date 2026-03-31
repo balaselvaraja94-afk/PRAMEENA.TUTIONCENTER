@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1e2f 100%);
+    color: #e2e8f0;
+    text-align: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px;
+}
+
+h1, h2 {
+    color: #ffffff;
+    margin-bottom: 24px;
+    font-weight: 700;
+}
+
+h1 { font-size: 2.8rem; letter-spacing: -1px; }
+h2 { font-size: 2rem; }
+
+/* Dashboard containers */
+.container, .box {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    margin: 20px auto;
+}
+
+.table-container {
+    max-width: 900px;
+}
+
+/* Form Elements */
+input[type="text"], 
+input[type="password"], 
+input[type="date"], 
+textarea {
+    width: 100%;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    font-size: 1.05rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+/* Fix calendar icon color for date input in dark mode */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+input::placeholder, textarea::placeholder {
+    color: #64748b;
+}
+
+input:focus, textarea:focus {
+    border-color: #6366f1;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25);
+}
+
+label {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: #cbd5e1;
+}
+
+input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    vertical-align: middle;
+    margin-left: 12px;
+    cursor: pointer;
+    accent-color: #6366f1;
+}
+
+/* Buttons */
+button, .btn {
+    display: inline-block;
+    width: 100%;
+    padding: 16px 24px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+}
+
+button:hover, .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.5);
+    background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+}
+
+button#registerBtn {
+    background: transparent;
+    border: 2px solid rgba(99, 102, 241, 0.5);
+    color: #818cf8;
+    box-shadow: none;
+}
+
+button#registerBtn:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: #818cf8;
+}
+
+a {
+    color: #818cf8;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #c7d2fe;
+}
+
+.subtext {
+    color: #94a3b8;
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 24px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+thead {
+    background: rgba(99, 102, 241, 0.15);
+}
+
+th {
+    padding: 18px 20px;
+    text-align: left;
+    font-weight: 600;
+    color: #e0e7ff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+td {
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: #cbd5e1;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* Specific Utilities */
+.status-yes { color: #34d399; font-weight: 600; background: rgba(52, 211, 153, 0.1); padding: 4px 12px; border-radius: 20px; }
+.status-no { color: #f87171; font-weight: 600; background: rgba(248, 113, 113, 0.1); padding: 4px 12px; border-radius: 20px; }
+.nav-links { margin-top: 30px; }
+hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 30px 0; }

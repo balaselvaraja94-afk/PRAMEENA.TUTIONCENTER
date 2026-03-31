@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Login</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+    <div class="box">
+        <h2>🎓 Student Login</h2>
+        <p class="subtext">Enter your details exactly as your teacher entered them to view your profile.</p>
+
+        <input id="loginName" type="text" placeholder="Your Full Name">
+        
+        <label for="loginDOB">Date of Birth:</label>
+        <input id="loginDOB" type="date">
+
+        <button id="studentLoginBtn">View My Profile</button>
+
+        <div class="nav-links">
+            <a href="index.html">← Back to Portal Selection</a>
+        </div>
+    </div>
+
+    <!-- Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        // Firebase Setup
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQnWl_OAeJZH6Pyz45tFdIQONIXo6steM",
+            authDomain: "tution-1881b.firebaseapp.com",
+            projectId: "tution-1881b",
+            storageBucket: "tution-1881b.firebasestorage.app",
+            messagingSenderId: "842710800011",
+            appId: "1:842710800011:web:a4e6eb4d8eb84009f3268e",
+            measurementId: "G-8E8QN984W7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.getElementById("studentLoginBtn").addEventListener("click", async () => {
+            const name = document.getElementById("loginName").value.trim();
+            const dob = document.getElementById("loginDOB").value;
+
+            if (!name || !dob) {
+                alert("Please enter both Name and Date of Birth!");
+                return;
+            }
+
+            try {
+                // Search for the specific student matching Name and DOB exactly
+                const studentsRef = collection(db, "students");
+                const q = query(studentsRef, where("name", "==", name), where("dob", "==", dob));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    alert("No student found matching this Name and Date of Birth. Check spelling with your teacher!");
+                } else {
+                    // Success! Save identifier securely temporarily in browser memory
+                    localStorage.setItem("loggedInStudentName", name);
+                    localStorage.setItem("loggedInStudentDOB", dob);
+
+                    alert("Securely found! Welcome " + name);
+                    window.location.href = "studentviewpage.html"; // Redirect to their personal dashboard
+                }
+            } catch (error) {
+                alert("Error searching database: " + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
