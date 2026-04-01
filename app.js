@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBQnWl_OAeJZH6Pyz45tFdIQONIXo6steM",
@@ -21,35 +21,74 @@ const db = getFirestore(app);
 const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
 
-// Login Function
-loginBtn.addEventListener("click", () => {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+// Registration Function
+if (registerBtn) {
+    registerBtn.addEventListener("click", async () => {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
 
-    signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            // alert("Successful Login! Welcome " + userCredential.user.email);
-            window.location.href = "teacherdashboard.html";
-        })
-        .catch((error) => {
-            // Master Admin Auto-Setup Hack: If the canva account doesn't exist yet, build it magically upon first login!
-            if ((error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') && email === "canvaonly322@gmail.com") {
-                createUserWithEmailAndPassword(auth, email, password)
-                    .then(async (userCredential) => {
-                        const user = userCredential.user;
-                        await setDoc(doc(db, "teachers", user.uid), {
-                            email: user.email,
-                            role: "Master Admin",
-                            createdAt: new Date().toISOString()
-                        });
-                        alert("Master Admin Account First-Time Setup Complete!");
-                        window.location.href = "teacherdashboard.html";
-                    })
-                    .catch((err) => alert("Admin Setup Failed! " + err.message));
+        if (!email || !password) return alert("Please fill both email and password.");
+
+        try {
+            // Check if any teachers exist
+            const snapshot = await getDocs(collection(db, "teachers"));
+            const isFirstUser = snapshot.empty;
+
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            const role = isFirstUser ? "Master Admin" : "Teacher";
+            const status = isFirstUser ? "Approved" : "Pending";
+
+            await setDoc(doc(db, "teachers", user.uid), {
+                email: user.email,
+                role: role,
+                status: status,
+                createdAt: new Date().toISOString()
+            });
+
+            if (isFirstUser) {
+                alert("Master Admin Account First-Time Setup Complete!");
+                window.location.href = "teacherdashboard.html";
             } else {
-                alert("Login Failed: " + error.message);
+                alert("Registration successful. Your account is pending Master Admin approval.");
+                auth.signOut();
             }
-        });
-});
+        } catch (error) {
+            alert("Registration Failed: " + error.message);
+        }
+    });
+}
+
+// Login Function
+if (loginBtn) {
+    loginBtn.addEventListener("click", async () => {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        if (!email || !password) return alert("Please fill both email and password.");
+
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            const userDoc = await getDoc(doc(db, "teachers", user.uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                if (userData.status === "Approved") {
+                    window.location.href = "teacherdashboard.html";
+                } else {
+                    alert("Login Denied: Your account is awaiting Master Admin approval.");
+                    auth.signOut();
+                }
+            } else {
+                alert("Login Error: User record not found. Please register.");
+                auth.signOut();
+            }
+        } catch (error) {
+            alert("Login Failed: " + error.message);
+        }
+    });
+}
 
 console.log("Firebase Auth & Firestore Database connected");
